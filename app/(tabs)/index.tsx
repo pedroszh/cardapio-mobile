@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import {Modal} from 'react-native';
 import {
   View,
   Text,
@@ -13,34 +14,149 @@ import { FontAwesome } from '@expo/vector-icons';
 import PaymentCard from './PaymentCard'; // Assumindo que PaymentCard está na mesma pasta
 
 // Tipos
+interface CustomizationOption {
+  id: string;
+  name: string;
+  price: number;
+}
+
+interface Customization {
+  id: string;
+  title: string;
+  type: 'radio' | 'checkbox'; // 'radio' para seleção única, 'checkbox' para múltipla
+  options: CustomizationOption[];
+}
+
 interface FoodItem {
   id: string;
   name: string;
   image: any;
   description: string;
   price: number;
+  customizations?: Customization[]; // Campo opcional
 }
 
 interface CartItem extends FoodItem {
   quantity: number;
+  selectedCustomizations?: CustomizationOption[]; // Para guardar as opções escolhidas
 }
 
 // Dados
 const foodMenu: FoodItem[] = [
-  { id: 'food1', name: 'X-Burguer', image: require('../../assets/images/xburguer.png'), description: 'Pão, carne e queijo', price: 15.99 },
-  { id: 'food2', name: 'X-Bacon', image: require('../../assets/images/xbacon.png'), description: 'Pão, carne, queijo, bacon crocante, alface, tomate, e molho especial.', price: 18.00 },
+  {
+    id: 'food1', name: 'X-Burguer', image: require('../../assets/images/xburguer.png'), description: 'Pão, carne e queijo', price: 15.99,
+    customizations: [
+      {
+        id: 'cust1', title: 'Adicionais', type: 'checkbox',
+        options: [
+          { id: 'opt1', name: 'Bacon', price: 3.00 },
+          { id: 'opt2', name: 'Ovo', price: 2.00 },
+          { id: 'opt3', name: 'Salada', price: 1.50 },
+        ],
+      },
+      {
+        id: 'cust2', title: 'Ponto da Carne', type: 'radio',
+        options: [
+          { id: 'opt4', name: 'Mal passado', price: 0 },
+          { id: 'opt5', name: 'Ao ponto', price: 0 },
+          { id: 'opt6', name: 'Bem passado', price: 0 },
+        ],
+      },
+    ]
+  },
+  {
+    id: 'food2', name: 'X-Bacon', image: require('../../assets/images/xbacon.png'), description: 'Pão, carne, queijo, bacon crocante, alface, tomate, e molho especial.', price: 18.00,
+    customizations: [
+      {
+        id: 'cust3', title: 'Adicionais', type: 'checkbox',
+        options: [
+          { id: 'opt7', name: 'Ovo', price: 2.00 },
+          { id: 'opt8', name: 'Carne extra', price: 5.00 },
+        ],
+      },
+      {
+        id: 'cust4', title: 'Remover', type: 'checkbox',
+        options: [
+          { id: 'opt9', name: 'Sem alface', price: 0 },
+          { id: 'opt10', name: 'Sem tomate', price: 0 },
+        ],
+      }
+    ]
+  },
   { id: 'food3', name: 'Batata Frita', image: require('../../assets/images/batataFrita.png'), description: 'Porção de batatas fritas crocantes', price: 10.99 },
-  { id: 'food4', name: 'Hot-Dog', image: require('../../assets/images/hotdog.png'), description: 'Pão de cachorro-quente, salsicha, ketchup, mostarda, maionese, milho, batata palha e outros condimentos a gosto.', price: 10.00 },
-  { id: 'food5', name: 'X-Tudo', image: require('../../assets/images/x-tudo.png'), description: 'Pão, carne, queijo, bacon, ovo frito, alface, tomate, milho, batata palha, ketchup, maionese e molho especial.', price: 25.00 },
-  { id: 'food6', name: 'Crepe Salgado', image: require('../../assets/images/crepesalgado.png'), description: 'Massa fina e crocante recheada com opções como frango com catupiry, presunto e queijo, carne seca com queijo coalho, ou vegetariano com palmito e tomate seco.', price: 15.00 },
-  { id: 'food7', name: 'Crepe Doce', image: require('../../assets/images/crepedoce.png'), description: 'Massa leve e dourada recheada com opções como Nutella com morango, doce de leite com banana, chocolate branco com Oreo ou Romeu e Julieta (goiabada com queijo).', price: 15.00 },
+  {
+    id: 'food4', name: 'Hot-Dog', image: require('../../assets/images/hotdog.png'), description: 'Pão, salsicha, e condimentos.', price: 10.00,
+    customizations: [
+      {
+        id: 'cust5', title: 'Turbine seu Hot-Dog', type: 'checkbox',
+        options: [
+          { id: 'opt11', name: 'Salsicha extra', price: 3.00 },
+          { id: 'opt12', name: 'Bacon', price: 3.00 },
+          { id: 'opt13', name: 'Queijo ralado', price: 1.50 },
+        ],
+      }
+    ]
+  },
+  {
+    id: 'food5', name: 'X-Tudo', image: require('../../assets/images/x-tudo.png'), description: 'Pão, carne, queijo, bacon, ovo frito, alface, tomate, milho...', price: 25.00,
+    customizations: [
+      {
+        id: 'cust6', title: 'Deseja remover algo?', type: 'checkbox',
+        options: [
+          { id: 'opt14', name: 'Sem milho', price: 0 },
+          { id: 'opt15', name: 'Sem batata palha', price: 0 },
+          { id: 'opt16', name: 'Sem alface/tomate', price: 0 },
+        ],
+      }
+    ]
+  },
+  {
+    id: 'food6', name: 'Crepe Salgado', image: require('../../assets/images/crepesalgado.png'), description: 'Massa fina e crocante com recheio.', price: 15.00,
+    customizations: [
+      {
+        id: 'cust7', title: 'Escolha o Recheio', type: 'radio',
+        options: [
+          { id: 'opt17', name: 'Frango com Catupiry', price: 0 },
+          { id: 'opt18', name: 'Presunto e Queijo', price: 0 },
+          { id: 'opt19', name: 'Carne Seca', price: 2.00 },
+        ],
+      }
+    ]
+  },
+  {
+    id: 'food7', name: 'Crepe Doce', image: require('../../assets/images/crepedoce.png'), description: 'Massa leve e dourada com recheio.', price: 15.00,
+    customizations: [
+       {
+        id: 'cust8', title: 'Escolha o Recheio', type: 'radio',
+        options: [
+          { id: 'opt20', name: 'Nutella com Morango', price: 2.00 },
+          { id: 'opt21', name: 'Doce de Leite com Banana', price: 0 },
+          { id: 'opt22', name: 'Chocolate Branco com Oreo', price: 1.50 },
+        ],
+      }
+    ]
+  },
 ];
 
 const drinkMenu: FoodItem[] = [
   { id: 'drink1', name: 'Refrigerante', image: require('../../assets/images/cocacola.png'), description: 'Refrigerante Coca Cola', price: 5.99 },
   { id: 'drink2', name: 'Suco de Laranja', image: require('../../assets/images/laranja.png'), description: 'Suco natural de frutas', price: 6.99 },
-  { id: 'drink3', name: 'Açai (500ml)', image: require('../../assets/images/açai.png'), description: 'Açaí cremoso batido com guaraná, servido em copo e acompanhado de toppings como banana, morango, leite condensado, granola e paçoca. Opção de adicionar leite em pó, amendoim ou chocolate.', price: 20.00 },
-  { id: 'drink4', name: 'Milkshake de Oreo', image: require('../../assets/images/milkshake.png'), description: 'Delicioso milkshake cremoso feito com sorvete de baunilha, pedaços de biscoito Oreo e cobertura de chocolate, finalizado com chantilly.', price: 18.00 },
+  {
+    id: 'drink3', name: 'Açai (500ml)', image: require('../../assets/images/açai.png'), description: 'Açaí cremoso batido com guaraná.', price: 20.00,
+    customizations: [
+       {
+        id: 'cust9', title: 'Toppings (escolha até 3)', type: 'checkbox', // Aqui você pode adicionar uma lógica extra para limitar a 3 opções
+        options: [
+          { id: 'opt23', name: 'Banana', price: 0 },
+          { id: 'opt24', name: 'Morango', price: 1.50 },
+          { id: 'opt25', name: 'Leite Condensado', price: 1.00 },
+          { id: 'opt26', name: 'Granola', price: 0 },
+          { id: 'opt27', name: 'Leite em Pó', price: 1.00 },
+        ],
+      }
+    ]
+  },
+  { id: 'drink4', name: 'Milkshake de Oreo', image: require('../../assets/images/milkshake.png'), description: 'Delicioso milkshake cremoso.', price: 18.00 },
 ];
 
 const comboMenu: FoodItem[] = [
@@ -63,17 +179,42 @@ export default function Index() {
   const [selectedPayment, setSelectedPayment] = useState('');
   const [screen, setScreen] = useState<'menu' | 'payment'>('menu');
 
-  const addToCart = (item: FoodItem, quantity = 1) => {
+// Novos estados para o modal de personalização
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
+  const [currentCustomizations, setCurrentCustomizations] = useState<CustomizationOption[]>([]);
+
+
+
+const handleAddToCart = (item: FoodItem) => {
+    // Se o item tem customizações, abre o modal
+    if (item.customizations && item.customizations.length > 0) {
+      setSelectedItem(item);
+      setCurrentCustomizations([]); // Limpa as seleções anteriores
+      setModalVisible(true);
+    } else {
+      // Se não, adiciona direto no carrinho sem customizações
+      addToCart(item, 1, []);
+    }
+  };
+
+  const addToCart = (
+    item: FoodItem,
+    quantity = 1,
+    selectedCustomizations: CustomizationOption[]
+  ) => {
     setCart((prevCart) => {
-      const index = prevCart.findIndex((i) => i.id === item.id);
-      if (index !== -1) {
-        const updatedCart = [...prevCart];
-        updatedCart[index].quantity += quantity;
-        return updatedCart;
-      } else {
-        return [...prevCart, { ...item, quantity }];
-      }
+      const newItem: CartItem = {
+        ...item,
+        quantity,
+        selectedCustomizations,
+        // Criamos um ID único para o item no carrinho para diferenciar
+        // itens iguais com customizações diferentes (ex: dois X-Burguer)
+        id: `${item.id}-${Date.now()}` 
+      };
+      return [...prevCart, newItem];
     });
+    setModalVisible(false); // Garante que o modal feche após adicionar
   };
 
   const removeFromCart = (id: string) => {
@@ -82,7 +223,10 @@ export default function Index() {
 
   const clearCart = () => setCart([]);
 
-  const totalPrice = cart.reduce((acc, item) => acc + item.price * item.quantity, 0).toFixed(2);
+  const totalPrice = cart.reduce((acc, item) => {
+    const customizationsPrice = item.selectedCustomizations?.reduce((custAcc, cust) => custAcc + cust.price, 0) ?? 0;
+    return acc + (item.price + customizationsPrice) * item.quantity;
+  }, 0).toFixed(2);
 
   const finalizarPedido = () => {
     if (!name.trim() || !contact.trim()) {
@@ -109,6 +253,86 @@ export default function Index() {
     setContact('');
     setSelectedPayment('');
     setScreen('menu');
+  };
+
+ const renderCustomizationModal = () => {
+    if (!selectedItem) return null;
+
+    const handleCustomizationSelect = (option: CustomizationOption, customization: Customization) => {
+      setCurrentCustomizations(prev => {
+        if (customization.type === 'radio') {
+          // Remove outras opções do mesmo grupo de rádio antes de adicionar a nova
+          const otherOptionsFromGroup = customization.options.map(o => o.id);
+          const filtered = prev.filter(p => !otherOptionsFromGroup.includes(p.id));
+          return [...filtered, option];
+        } else { // checkbox
+          const isSelected = prev.find(p => p.id === option.id);
+          if (isSelected) {
+            // Se já estiver selecionado, remove
+            return prev.filter(p => p.id !== option.id);
+          } else {
+            // Se não, adiciona
+            return [...prev, option];
+          }
+        }
+      });
+    };
+
+    const calculateCustomizationPrice = () => {
+      // Soma o preço base do item com o preço de todas as customizações selecionadas
+      return currentCustomizations.reduce((acc, opt) => acc + opt.price, selectedItem.price);
+    };
+
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{selectedItem.name}</Text>
+            <ScrollView>
+              {selectedItem.customizations?.map(cust => (
+                <View key={cust.id} style={styles.customizationGroup}>
+                  <Text style={styles.customizationTitle}>{cust.title}</Text>
+                  {cust.options.map(opt => (
+                    <TouchableOpacity
+                      key={opt.id}
+                      style={styles.optionButton}
+                      onPress={() => handleCustomizationSelect(opt, cust)}
+                    >
+                      <FontAwesome
+                        name={cust.type === 'radio' ? (currentCustomizations.some(p => p.id === opt.id) ? 'dot-circle-o' : 'circle-o') : (currentCustomizations.some(p => p.id === opt.id) ? 'check-square-o' : 'square-o')}
+                        size={20}
+                        color="#333"
+                      />
+                      <Text style={styles.optionText}>{opt.name}</Text>
+                      {opt.price > 0 && <Text style={styles.optionPrice}>+ R$ {opt.price.toFixed(2)}</Text>}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.modalAddButton}
+              onPress={() => addToCart(selectedItem, 1, currentCustomizations)}
+            >
+              <Text style={styles.modalAddButtonText}>
+                Adicionar ao carrinho (R$ {calculateCustomizationPrice().toFixed(2)})
+              </Text>
+            </TouchableOpacity>
+             <TouchableOpacity
+              style={[styles.modalAddButton, {backgroundColor: '#aaa'}]}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalAddButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
   };
 
   const renderMenu = () => (
@@ -141,7 +365,7 @@ export default function Index() {
           <Text style={styles.foodName}>{item.name}</Text>
           <Text>{item.description}</Text>
           <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
-          <TouchableOpacity style={styles.addButton} onPress={() => addToCart(item)}>
+         <TouchableOpacity style={styles.addButton} onPress={() => handleAddToCart(item)}>
             <FontAwesome name="shopping-cart" size={16} color="white" />
             <Text style={styles.addButtonText}>Adicionar</Text>
           </TouchableOpacity>
@@ -155,7 +379,7 @@ export default function Index() {
           <Text style={styles.foodName}>{item.name}</Text>
           <Text>{item.description}</Text>
           <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
-          <TouchableOpacity style={styles.addButton} onPress={() => addToCart(item)}>
+         <TouchableOpacity style={styles.addButton} onPress={() => handleAddToCart(item)}>
             <FontAwesome name="shopping-cart" size={16} color="white" />
             <Text style={styles.addButtonText}>Adicionar</Text>
           </TouchableOpacity>
@@ -169,19 +393,27 @@ export default function Index() {
           <Text style={styles.foodName}>{item.name}</Text>
           <Text>{item.description}</Text>
           <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
-          <TouchableOpacity style={styles.addButton} onPress={() => addToCart(item)}>
+         <TouchableOpacity style={styles.addButton} onPress={() => handleAddToCart(item)}>
             <FontAwesome name="shopping-cart" size={16} color="white" />
             <Text style={styles.addButtonText}>Adicionar</Text>
           </TouchableOpacity>
         </View>
       ))}
 
-      <Text style={styles.sectionTitle}>Carrinho</Text>
+     <Text style={styles.sectionTitle}>Carrinho</Text>
       {cart.map((item) => (
         <View key={item.id} style={styles.cartItemContainer}>
-          <Text style={styles.cartItem}>
-            {item.name} x{item.quantity} - R$ {(item.price * item.quantity).toFixed(2)}
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cartItem}>
+              {item.name} x{item.quantity}
+            </Text>
+            {/* Mostra as customizações escolhidas */}
+            {item.selectedCustomizations && item.selectedCustomizations.length > 0 && (
+              <Text style={styles.cartCustomizations}>
+                {item.selectedCustomizations.map(c => c.name).join(', ')}
+              </Text>
+            )}
+          </View>
           <TouchableOpacity onPress={() => removeFromCart(item.id)} style={styles.removeButton}>
             <Text style={styles.removeButtonText}>X</Text>
           </TouchableOpacity>
@@ -195,6 +427,7 @@ export default function Index() {
           <Text style={styles.paymentButtonText}>Escolher forma de pagamento</Text>
         </TouchableOpacity>
       )}
+      {renderCustomizationModal()}
     </ScrollView>
   );
 
@@ -333,4 +566,64 @@ const styles = StyleSheet.create({
   alignItems: 'center',
   marginBottom: 30,
 },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  customizationGroup: {
+    marginBottom: 15,
+  },
+  customizationTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333'
+  },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  optionText: {
+    fontSize: 16,
+    marginLeft: 10,
+    flex: 1,
+  },
+  optionPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalAddButton: {
+    backgroundColor: '#28a745',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  modalAddButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cartCustomizations: {
+    color: '#f0f0f0',
+    fontSize: 12,
+    marginLeft: 10,
+    fontStyle: 'italic',
+  },
 });
