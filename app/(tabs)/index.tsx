@@ -147,11 +147,11 @@ const drinkMenu: FoodItem[] = [
        {
         id: 'cust9', title: 'Toppings (escolha até 3)', type: 'checkbox', // Aqui você pode adicionar uma lógica extra para limitar a 3 opções
         options: [
-          { id: 'opt23', name: 'Banana', price: 0 },
-          { id: 'opt24', name: 'Morango', price: 1.50 },
-          { id: 'opt25', name: 'Leite Condensado', price: 1.00 },
-          { id: 'opt26', name: 'Granola', price: 0 },
-          { id: 'opt27', name: 'Leite em Pó', price: 1.00 },
+          { id: 'opt23', name: 'Banana', price: 4.00 },
+          { id: 'opt24', name: 'Morango', price: 4.00 },
+          { id: 'opt25', name: 'Leite Condensado', price: 4.00 },
+          { id: 'opt26', name: 'Granola', price: 4.00 },
+          { id: 'opt27', name: 'Leite em Pó', price: 4.00 },
         ],
       }
     ]
